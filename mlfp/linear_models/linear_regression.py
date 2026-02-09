@@ -1,19 +1,48 @@
 import numpy as np
 
-class LogisticRegression:
+METHODS = ["closed_form", "iterative_optimization"]
+SOLVERS = ["normal_equation"]
+
+class LinearRegression:
     """
     
     """
-    def __init__(self, method, solver=None, optimizer=None) -> None:
+    def __init__(self, method: str, solver: None | str = None, optimizer=None) -> None:
         self.method = method
         self.solver = solver
         self.optimizer = optimizer
-        self.intercept = None
-        self.coefficients = None
+        self.params = None
+
+        if method not in METHODS:
+            raise ValueError(f"Method must be one of the following: {METHODS}")
+        elif method == "closed_form" and self.solver not in SOLVERS:
+            raise ValueError(f"Solver must be one of the following: {SOLVERS}")
     
     def fit(self, X, y):
-    
-    def predict(X):
+        try:
+            if self.solver == "normal_equation":
+                params = normal_equation(X, y)
+                self.params = params
+        except Exception as e:
+            print(f"Error Fitting Data: {e}.")
+
+    def predict(self, X):
+        try:
+            return X @ self.params
+        except Exception as e:
+            print(f"Error Predicting Values: {e}.")
+
+    def __str__(self) -> str:
+        if self.solver != None and type(self.params) == np.ndarray:
+            return f"Model: Linear Regression \nSolution Method: {self.method} \nSolver: {self.solver} \nIntercept: {self.params[0]} \nCoefficients: {self.params[1:].flatten()}"
+        elif self.optimizer != None and type(self.params) == np.ndarray:
+            return f"Model: Linear Regression \nSolution Method: {self.method} \nSolver: {self.optimizer} \nIntercept: {self.params[0]} \nCoefficients: {self.params[1:].flatten()}"
+        elif self.solver != None:
+            return f"Model: Linear Regression \nSolution Method: {self.method} \nSolver: {self.solver}"
+        elif self.optimizer != None:
+            return f"Model: Linear Regression \nSolution Method: {self.method} \nSolver: {self.optimizer}"
+        else:
+            return f"Model: Linear Regression \nSolution Method: {self.method}"
 
 
 def normal_equation(X: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -40,8 +69,8 @@ def normal_equation(X: np.ndarray, y: np.ndarray) -> np.ndarray:
         raise ValueError(f"Number of samples must match: X {X.shape[0]} vs y {y.shape[0]}")
 
     intercept_col = np.ones((X.shape[0], 1))
-    X = np.concatenate((intercept_col, X), axis=1)
-    return np.linalg.inv(X.T @ X) @ X.T @ y
+    X = np.concatenate((intercept_col, X.reshape(-1, 1)), axis=1)
+    return np.linalg.inv(X.T @ X) @ X.T @ y.reshape(-1, 1)
 
 def residual_sum_of_squares(y: np.ndarray, y_pred: np.ndarray) -> float:
     """
